@@ -21,6 +21,7 @@ import { LifecycleTracker } from "./lifecycle-tracker";
 import { MilestonesSection } from "./milestones-section";
 import { FinancialsSection } from "./financials-section";
 import { DefectsSection } from "./defects-section";
+import { AttachmentsSection } from "./attachments-section";
 import { updateRamp } from "@/lib/data/ramps";
 import type { Ramp, RampStatus, LifecycleStage } from "@/lib/types/database";
 
@@ -172,6 +173,10 @@ export function RampSlideOver({
           <Separator />
 
           <DefectsSection rampId={ramp.id} canEdit={canEdit} />
+
+          <Separator />
+
+          <AttachmentsSection rampId={ramp.id} canEdit={canEdit} />
 
           <Separator />
 

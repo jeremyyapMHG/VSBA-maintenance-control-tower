@@ -96,3 +96,16 @@ export interface Communication {
   logged_by: string | null;
   created_at: string;
 }
+
+export type FileType = "cfi" | "school_signoff" | "photo" | "other";
+
+export interface Attachment {
+  id: string;
+  ramp_id: string;
+  file_name: string;
+  file_path: string;
+  file_type: FileType;
+  file_size: number | null;
+  uploaded_by: string | null;
+  created_at: string;
+}
