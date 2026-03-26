@@ -47,3 +47,16 @@ export interface Ramp {
   created_at: string;
   updated_at: string;
 }
+
+export type MilestoneType = "core" | "interim";
+
+export interface Milestone {
+  id: string;
+  ramp_id: string;
+  name: string;
+  type: MilestoneType;
+  planned_date: string | null;
+  actual_date: string | null;
+  sort_order: number;
+  created_at: string;
+}

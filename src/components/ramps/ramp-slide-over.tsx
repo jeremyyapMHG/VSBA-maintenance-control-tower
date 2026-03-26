@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LifecycleTracker } from "./lifecycle-tracker";
+import { MilestonesSection } from "./milestones-section";
 import { updateRamp } from "@/lib/data/ramps";
 import type { Ramp, RampStatus, LifecycleStage } from "@/lib/types/database";
 
@@ -110,6 +111,11 @@ export function RampSlideOver({
             </h3>
             <LifecycleTracker currentStage={canEdit ? stage : ramp.lifecycle_stage} />
           </div>
+
+          <Separator />
+
+          {/* Milestones */}
+          <MilestonesSection rampId={ramp.id} canEdit={canEdit} />
 
           <Separator />
 
