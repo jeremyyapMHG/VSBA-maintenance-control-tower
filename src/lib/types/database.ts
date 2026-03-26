@@ -84,3 +84,15 @@ export interface Defect {
   resolved_date: string | null;
   created_at: string;
 }
+
+export type CommMethod = "email" | "phone" | "in_person" | "other";
+
+export interface Communication {
+  id: string;
+  school_id: string;
+  date: string;
+  method: CommMethod;
+  summary: string;
+  logged_by: string | null;
+  created_at: string;
+}

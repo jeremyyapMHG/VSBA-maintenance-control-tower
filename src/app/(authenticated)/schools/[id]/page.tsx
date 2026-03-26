@@ -6,6 +6,7 @@ import { fetchSchoolById } from "@/lib/data/schools";
 import { fetchRampsBySchool } from "@/lib/data/ramps";
 import { useCanWrite } from "@/lib/auth/hooks";
 import { RampSlideOver } from "@/components/ramps/ramp-slide-over";
+import { CommunicationLog } from "@/components/schools/communication-log";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -61,6 +62,7 @@ export default function SchoolViewPage({
   const [slideOverOpen, setSlideOverOpen] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [lastContact, setLastContact] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -237,6 +239,13 @@ export default function SchoolViewPage({
           </Table>
         </div>
       </div>
+
+      {/* Communication Log */}
+      <CommunicationLog
+        schoolId={id}
+        canEdit={canEdit}
+        onLastContactUpdate={setLastContact}
+      />
 
       <RampSlideOver
         ramp={selectedRamp}
