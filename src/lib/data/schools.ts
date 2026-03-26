@@ -7,7 +7,8 @@ export async function fetchSchools(): Promise<SchoolWithRegion[]> {
     .from("schools")
     .select(`
       *,
-      regions (id, name)
+      regions (id, name),
+      ramps (id)
     `)
     .order("name");
 
@@ -15,8 +16,21 @@ export async function fetchSchools(): Promise<SchoolWithRegion[]> {
 
   return (data ?? []).map((school: any) => ({
     ...school,
-    ramp_count: 0,
+    ramp_count: school.ramps?.length ?? 0,
+    ramps: undefined,
   }));
+}
+
+export async function fetchSchoolById(id: string) {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("schools")
+    .select(`*, regions (id, name)`)
+    .eq("id", id)
+    .single();
+
+  if (error) throw error;
+  return data;
 }
 
 export async function fetchRegions(): Promise<Region[]> {

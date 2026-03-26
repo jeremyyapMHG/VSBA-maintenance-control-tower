@@ -29,3 +29,21 @@ export interface SchoolWithRegion extends School {
   regions: Region;
   ramp_count: number;
 }
+
+export type LifecycleStage = "design" | "construction" | "admin_closeout" | "dlp" | "final_closure";
+export type RampStatus = "active" | "on_hold" | "completed" | "blocked";
+
+export interface Ramp {
+  id: string;
+  school_id: string;
+  name: string;
+  description: string | null;
+  lifecycle_stage: LifecycleStage;
+  status: RampStatus;
+  commentary: string | null;
+  budget_amount: number;
+  actual_amount: number;
+  forecast_amount: number;
+  created_at: string;
+  updated_at: string;
+}
