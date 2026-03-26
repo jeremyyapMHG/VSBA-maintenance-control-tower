@@ -15,7 +15,7 @@ export async function fetchRampsBySchool(schoolId: string): Promise<Ramp[]> {
 
 export async function updateRamp(
   rampId: string,
-  updates: Partial<Pick<Ramp, "status" | "commentary" | "lifecycle_stage">>
+  updates: Partial<Pick<Ramp, "status" | "commentary" | "lifecycle_stage" | "budget_amount" | "actual_amount" | "forecast_amount">>
 ): Promise<Ramp> {
   const supabase = createClient();
   const { data, error } = await supabase

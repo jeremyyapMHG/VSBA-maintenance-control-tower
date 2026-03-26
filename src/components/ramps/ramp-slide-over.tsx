@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { LifecycleTracker } from "./lifecycle-tracker";
 import { MilestonesSection } from "./milestones-section";
+import { FinancialsSection } from "./financials-section";
 import { updateRamp } from "@/lib/data/ramps";
 import type { Ramp, RampStatus, LifecycleStage } from "@/lib/types/database";
 
@@ -90,9 +91,6 @@ export function RampSlideOver({
   };
 
   if (!ramp) return null;
-
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" }).format(amount);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -168,23 +166,7 @@ export function RampSlideOver({
 
           <Separator />
 
-          <div>
-            <h3 className="mb-3 text-sm font-medium text-vsba-charcoal">Financials</h3>
-            <div className="grid grid-cols-3 gap-4 text-sm">
-              <div>
-                <p className="text-muted-foreground">Budget</p>
-                <p className="font-medium">{formatCurrency(ramp.budget_amount)}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Actual</p>
-                <p className="font-medium">{formatCurrency(ramp.actual_amount)}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Forecast</p>
-                <p className="font-medium">{formatCurrency(ramp.forecast_amount)}</p>
-              </div>
-            </div>
-          </div>
+          <FinancialsSection ramp={ramp} canEdit={canEdit} onRampUpdated={onRampUpdated} />
 
           <Separator />
 

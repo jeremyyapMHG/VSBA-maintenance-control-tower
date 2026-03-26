@@ -48,6 +48,18 @@ export interface Ramp {
   updated_at: string;
 }
 
+export type VariationStatus = "pending" | "approved" | "rejected";
+
+export interface Variation {
+  id: string;
+  ramp_id: string;
+  description: string;
+  amount: number;
+  status: VariationStatus;
+  date: string | null;
+  created_at: string;
+}
+
 export type MilestoneType = "core" | "interim";
 
 export interface Milestone {
