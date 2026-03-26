@@ -1,26 +1,64 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  /* Semantic tokens for shadcn/ui components */
+  --color-background: #F6F6F9;
+  --color-foreground: #1A1A1A;
+
+  --color-primary: #AF272F;
+  --color-primary-foreground: #FFFFFF;
+
+  --color-secondary: #B9E3E6;
+  --color-secondary-foreground: #1A1A1A;
+
+  --color-accent: #DFF1F2;
+  --color-accent-foreground: #1A1A1A;
+
+  --color-destructive: #DC2626;
+  --color-destructive-foreground: #FFFFFF;
+
+  --color-muted: #E5E5E8;
+  --color-muted-foreground: #6B7280;
+
+  --color-card: #FFFFFF;
+  --color-card-foreground: #1A1A1A;
+
+  --color-popover: #FFFFFF;
+  --color-popover-foreground: #1A1A1A;
+
+  --color-border: #E2E2E5;
+  --color-input: #E2E2E5;
+  --color-ring: #AF272F;
+
+  /* Sidebar tokens */
+  --color-sidebar: #FFFFFF;
+  --color-sidebar-foreground: #1A1A1A;
+  --color-sidebar-primary: #AF272F;
+  --color-sidebar-primary-foreground: #FFFFFF;
+  --color-sidebar-accent: #DFF1F2;
+  --color-sidebar-accent-foreground: #1A1A1A;
+  --color-sidebar-border: #E2E2E5;
+  --color-sidebar-ring: #AF272F;
+
+  /* VSBA brand palette for direct use (e.g. bg-vsba-red, text-vsba-teal) */
+  --color-vsba-red: #AF272F;
+  --color-vsba-dark-red: #7B1B21;
+  --color-vsba-teal: #B9E3E6;
+  --color-vsba-focus-teal: #50D8D0;
+  --color-vsba-charcoal: #1A1A1A;
+  --color-vsba-bg: #F6F6F9;
+  --color-vsba-bg-alt: #F9FCFC;
+
+  /* Border radius */
+  --radius: 0.5rem;
+
+  /* Fonts */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--color-background);
+  color: var(--color-foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
