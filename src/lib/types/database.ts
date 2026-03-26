@@ -72,3 +72,15 @@ export interface Milestone {
   sort_order: number;
   created_at: string;
 }
+
+export type DefectStatus = "open" | "resolved";
+
+export interface Defect {
+  id: string;
+  ramp_id: string;
+  description: string;
+  status: DefectStatus;
+  identified_date: string;
+  resolved_date: string | null;
+  created_at: string;
+}

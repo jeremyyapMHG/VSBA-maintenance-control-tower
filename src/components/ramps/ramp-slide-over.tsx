@@ -20,6 +20,7 @@ import {
 import { LifecycleTracker } from "./lifecycle-tracker";
 import { MilestonesSection } from "./milestones-section";
 import { FinancialsSection } from "./financials-section";
+import { DefectsSection } from "./defects-section";
 import { updateRamp } from "@/lib/data/ramps";
 import type { Ramp, RampStatus, LifecycleStage } from "@/lib/types/database";
 
@@ -167,6 +168,10 @@ export function RampSlideOver({
           <Separator />
 
           <FinancialsSection ramp={ramp} canEdit={canEdit} onRampUpdated={onRampUpdated} />
+
+          <Separator />
+
+          <DefectsSection rampId={ramp.id} canEdit={canEdit} />
 
           <Separator />
 
