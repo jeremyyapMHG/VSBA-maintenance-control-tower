@@ -1,15 +1,23 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { fetchSchools, fetchRegions } from "@/lib/data/schools";
+import { fetchDashboardData, fetchRegions } from "@/lib/data/schools";
+import { computeDashboardMetrics } from "@/lib/metrics";
 import { MetricTile } from "@/components/dashboard/metric-tile";
 import { FilterBar, type DashboardFilters } from "@/components/dashboard/filter-bar";
 import { SchoolsTable } from "@/components/dashboard/schools-table";
+import { DonutChart, LifecyclePieChart, FinancialBarChart, CommHealthChart } from "@/components/dashboard/charts";
+import { UpcomingMilestones } from "@/components/dashboard/upcoming-milestones";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { School, Building2, Wrench, Activity } from "lucide-react";
-import type { Region, SchoolWithRegion } from "@/lib/types/database";
+import type { Region, SchoolWithRegion, Ramp, Milestone, Variation, Defect } from "@/lib/types/database";
 
 export default function DashboardPage() {
   const [schools, setSchools] = useState<SchoolWithRegion[]>([]);
+  const [ramps, setRamps] = useState<Ramp[]>([]);
+  const [milestones, setMilestones] = useState<Milestone[]>([]);
+  const [variations, setVariations] = useState<Variation[]>([]);
+  const [defects, setDefects] = useState<Defect[]>([]);
   const [regions, setRegions] = useState<Region[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<DashboardFilters>({
@@ -21,14 +29,18 @@ export default function DashboardPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [schoolsData, regionsData] = await Promise.all([
-          fetchSchools(),
+        const [dashData, regionsData] = await Promise.all([
+          fetchDashboardData(),
           fetchRegions(),
         ]);
-        setSchools(schoolsData);
+        setSchools(dashData.schools);
+        setRamps(dashData.ramps);
+        setMilestones(dashData.milestones);
+        setVariations(dashData.variations);
+        setDefects(dashData.defects);
         setRegions(regionsData);
       } catch (err) {
-        console.error("Failed to load dashboard data:", err);
+        console.error("Failed to load dashboard:", err);
       } finally {
         setLoading(false);
       }
@@ -36,6 +48,7 @@ export default function DashboardPage() {
     load();
   }, []);
 
+  // Filter schools
   const filteredSchools = useMemo(() => {
     return schools.filter((s) => {
       if (filters.region !== "all" && s.region_id !== filters.region) return false;
@@ -44,22 +57,54 @@ export default function DashboardPage() {
         filters.search &&
         !s.name.toLowerCase().includes(filters.search.toLowerCase()) &&
         !(s.regions?.name ?? "").toLowerCase().includes(filters.search.toLowerCase())
-      ) {
-        return false;
-      }
+      ) return false;
       return true;
     });
   }, [schools, filters]);
 
-  const totalRamps = useMemo(
-    () => filteredSchools.reduce((sum, s) => sum + s.ramp_count, 0),
+  // Filter ramps to only those belonging to filtered schools
+  const filteredSchoolIds = useMemo(
+    () => new Set(filteredSchools.map((s) => s.id)),
     [filteredSchools]
   );
 
-  const activeSchools = useMemo(
-    () => filteredSchools.filter((s) => s.status === "active").length,
-    [filteredSchools]
+  const filteredRamps = useMemo(
+    () => ramps.filter((r) => filteredSchoolIds.has(r.school_id)),
+    [ramps, filteredSchoolIds]
   );
+
+  const filteredMilestones = useMemo(
+    () => milestones.filter((m) => filteredRamps.some((r) => r.id === m.ramp_id)),
+    [milestones, filteredRamps]
+  );
+
+  const filteredVariations = useMemo(
+    () => variations.filter((v) => filteredRamps.some((r) => r.id === v.ramp_id)),
+    [variations, filteredRamps]
+  );
+
+  const filteredDefects = useMemo(
+    () => defects.filter((d) => filteredRamps.some((r) => r.id === d.ramp_id)),
+    [defects, filteredRamps]
+  );
+
+  // Compute metrics from filtered data
+  const metrics = useMemo(
+    () => computeDashboardMetrics(filteredSchools, filteredRamps, filteredMilestones, filteredVariations, filteredDefects),
+    [filteredSchools, filteredRamps, filteredMilestones, filteredVariations, filteredDefects]
+  );
+
+  // Update school ramp counts
+  const schoolsWithCounts = useMemo(() => {
+    const countMap: Record<string, number> = {};
+    for (const r of filteredRamps) {
+      countMap[r.school_id] = (countMap[r.school_id] || 0) + 1;
+    }
+    return filteredSchools.map((s) => ({ ...s, ramp_count: countMap[s.id] || 0 }));
+  }, [filteredSchools, filteredRamps]);
+
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD", maximumFractionDigits: 0 }).format(amount);
 
   if (loading) {
     return (
@@ -72,48 +117,93 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-vsba-charcoal">
-          Program Dashboard
-        </h2>
-        <p className="mt-1 text-muted-foreground">
-          Overview of the RAMPS school maintenance program.
-        </p>
+        <h2 className="text-2xl font-bold text-vsba-charcoal">Program Dashboard</h2>
+        <p className="mt-1 text-muted-foreground">Overview of the RAMPS school maintenance program.</p>
       </div>
 
+      {/* Summary Tiles */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricTile
-          title="Total Schools"
-          value={filteredSchools.length}
-          icon={School}
-          description="In program"
-        />
-        <MetricTile
-          title="Total Ramps"
-          value={totalRamps}
-          icon={Wrench}
-          description="Work packages"
-        />
-        <MetricTile
-          title="Active Schools"
-          value={activeSchools}
-          icon={Building2}
-          description="Currently active"
-        />
-        <MetricTile
-          title="Regions"
-          value={regions.length}
-          icon={Activity}
-          description="DET regions"
-        />
+        <MetricTile title="Total Schools" value={metrics.totalSchools} icon={School} description="In program" />
+        <MetricTile title="Total Ramps" value={metrics.totalRamps} icon={Wrench} description="Work packages" />
+        <MetricTile title="Active Schools" value={metrics.activeSchools} icon={Building2} description="Currently active" />
+        <MetricTile title="Regions" value={regions.length} icon={Activity} description="DET regions" />
       </div>
 
-      <FilterBar
-        regions={regions}
-        filters={filters}
-        onFilterChange={setFilters}
-      />
+      {/* Charts Row 1: Lifecycle + Completion donut charts */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="lg:col-span-1">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Lifecycle Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <LifecyclePieChart data={metrics.lifecycleDistribution} />
+          </CardContent>
+        </Card>
 
-      <SchoolsTable schools={filteredSchools} />
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Completion Progress</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex justify-around py-4">
+              <DonutChart percentage={metrics.practicalCompletionPct} label="Practical Completion" />
+              <DonutChart percentage={metrics.adminCompletionPct} label="Admin Completion" color="#7B1B21" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Quality & Variations</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex justify-around py-4">
+              <DonutChart percentage={metrics.defectsPct} label="With Defects" color="#EF4444" />
+              <DonutChart percentage={metrics.variationsPct} label="With Variations" color="#F59E0B" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts Row 2: Financials + Communication Health */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Financial Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FinancialBarChart
+              budget={metrics.totalBudget}
+              actual={metrics.totalActual}
+              forecast={metrics.totalForecast}
+              variations={metrics.totalVariations}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Communication Health</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CommHealthChart green={metrics.commGreen} amber={metrics.commAmber} red={metrics.commRed} />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Upcoming Milestones */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">Upcoming Milestones (Next 4 Weeks)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <UpcomingMilestones milestones={filteredMilestones} />
+        </CardContent>
+      </Card>
+
+      {/* Filters + Schools Table */}
+      <FilterBar regions={regions} filters={filters} onFilterChange={setFilters} />
+      <SchoolsTable schools={schoolsWithCounts} />
     </div>
   );
 }
