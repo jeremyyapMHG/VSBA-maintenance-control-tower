@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, School, Settings, Map, Users } from "lucide-react";
+import { LayoutDashboard, School, Settings, Map, Users, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
@@ -10,6 +10,7 @@ const navigation = [
   { name: "Schools", href: "/", icon: School },
   { name: "Regions", href: "/admin/regions", icon: Map },
   { name: "Users", href: "/admin/users", icon: Users },
+  { name: "Import", href: "/admin/import", icon: Upload },
   { name: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
