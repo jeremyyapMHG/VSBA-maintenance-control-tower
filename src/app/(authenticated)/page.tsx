@@ -24,6 +24,8 @@ export default function DashboardPage() {
     region: "all",
     status: "all",
     search: "",
+    dateFrom: "",
+    dateTo: "",
   });
 
   useEffect(() => {
@@ -50,17 +52,41 @@ export default function DashboardPage() {
 
   // Filter schools
   const filteredSchools = useMemo(() => {
+    const searchLower = filters.search.toLowerCase();
     return schools.filter((s) => {
       if (filters.region !== "all" && s.region_id !== filters.region) return false;
       if (filters.status !== "all" && s.status !== filters.status) return false;
-      if (
-        filters.search &&
-        !s.name.toLowerCase().includes(filters.search.toLowerCase()) &&
-        !(s.regions?.name ?? "").toLowerCase().includes(filters.search.toLowerCase())
-      ) return false;
+      if (searchLower) {
+        const schoolMatch =
+          s.name.toLowerCase().includes(searchLower) ||
+          (s.regions?.name ?? "").toLowerCase().includes(searchLower);
+        const schoolRamps = ramps.filter((r) => r.school_id === s.id);
+        const rampMatch = schoolRamps.some(
+          (r) =>
+            r.name.toLowerCase().includes(searchLower) ||
+            (r.description ?? "").toLowerCase().includes(searchLower)
+        );
+        if (!schoolMatch && !rampMatch) return false;
+      }
+      // Date range: keep school only if it has ramps with milestones in range
+      if (filters.dateFrom || filters.dateTo) {
+        const schoolRampIds = new Set(
+          ramps.filter((r) => r.school_id === s.id).map((r) => r.id)
+        );
+        const hasMatchingMilestone = milestones.some((m) => {
+          if (!schoolRampIds.has(m.ramp_id)) return false;
+          const dates = [m.planned_date, m.actual_date].filter(Boolean) as string[];
+          return dates.some((d) => {
+            if (filters.dateFrom && d < filters.dateFrom) return false;
+            if (filters.dateTo && d > filters.dateTo) return false;
+            return true;
+          });
+        });
+        if (!hasMatchingMilestone) return false;
+      }
       return true;
     });
-  }, [schools, filters]);
+  }, [schools, ramps, milestones, filters]);
 
   // Filter ramps to only those belonging to filtered schools
   const filteredSchoolIds = useMemo(

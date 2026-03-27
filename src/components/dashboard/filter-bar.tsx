@@ -16,6 +16,8 @@ export interface DashboardFilters {
   region: string;
   status: string;
   search: string;
+  dateFrom: string;
+  dateTo: string;
 }
 
 interface FilterBarProps {
@@ -32,10 +34,15 @@ const statusOptions = [
 ];
 
 export function FilterBar({ regions, filters, onFilterChange }: FilterBarProps) {
-  const hasFilters = filters.region !== "all" || filters.status !== "all" || filters.search !== "";
+  const hasFilters =
+    filters.region !== "all" ||
+    filters.status !== "all" ||
+    filters.search !== "" ||
+    filters.dateFrom !== "" ||
+    filters.dateTo !== "";
 
   const clearFilters = () => {
-    onFilterChange({ region: "all", status: "all", search: "" });
+    onFilterChange({ region: "all", status: "all", search: "", dateFrom: "", dateTo: "" });
   };
 
   return (
@@ -84,6 +91,26 @@ export function FilterBar({ regions, filters, onFilterChange }: FilterBarProps) 
           ))}
         </SelectContent>
       </Select>
+
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground whitespace-nowrap">From</span>
+        <Input
+          type="date"
+          value={filters.dateFrom}
+          onChange={(e) => onFilterChange({ ...filters, dateFrom: e.target.value })}
+          className="w-40"
+        />
+      </div>
+
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground whitespace-nowrap">To</span>
+        <Input
+          type="date"
+          value={filters.dateTo}
+          onChange={(e) => onFilterChange({ ...filters, dateTo: e.target.value })}
+          className="w-40"
+        />
+      </div>
 
       {hasFilters && (
         <Button variant="ghost" size="sm" onClick={clearFilters}>
