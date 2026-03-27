@@ -50,3 +50,14 @@ export async function deleteDefect(id: string): Promise<void> {
   const { error } = await supabase.from("defects").delete().eq("id", id);
   if (error) throw error;
 }
+
+export async function fetchDefectsBySchool(schoolId: string): Promise<Defect[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("defects")
+    .select("*, ramps!inner(school_id)")
+    .eq("ramps.school_id", schoolId);
+
+  if (error) throw error;
+  return (data ?? []).map((d: any) => ({ ...d, ramps: undefined }));
+}

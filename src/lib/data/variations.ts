@@ -53,3 +53,14 @@ export async function deleteVariation(id: string): Promise<void> {
   const { error } = await supabase.from("variations").delete().eq("id", id);
   if (error) throw error;
 }
+
+export async function fetchVariationsBySchool(schoolId: string): Promise<Variation[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("variations")
+    .select("*, ramps!inner(school_id)")
+    .eq("ramps.school_id", schoolId);
+
+  if (error) throw error;
+  return (data ?? []).map((v: any) => ({ ...v, ramps: undefined }));
+}

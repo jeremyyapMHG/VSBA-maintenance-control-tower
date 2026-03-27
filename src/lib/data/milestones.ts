@@ -61,3 +61,15 @@ export async function deleteMilestone(id: string): Promise<void> {
 
   if (error) throw error;
 }
+
+export async function fetchMilestonesBySchool(schoolId: string): Promise<Milestone[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("milestones")
+    .select("*, ramps!inner(school_id)")
+    .eq("ramps.school_id", schoolId)
+    .order("sort_order");
+
+  if (error) throw error;
+  return (data ?? []).map((m: any) => ({ ...m, ramps: undefined }));
+}

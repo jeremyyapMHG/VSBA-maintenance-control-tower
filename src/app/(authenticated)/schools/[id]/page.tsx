@@ -4,9 +4,14 @@ import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { fetchSchoolById } from "@/lib/data/schools";
 import { fetchRampsBySchool } from "@/lib/data/ramps";
+import { fetchMilestonesBySchool } from "@/lib/data/milestones";
+import { fetchVariationsBySchool } from "@/lib/data/variations";
+import { fetchDefectsBySchool } from "@/lib/data/defects";
 import { useCanWrite } from "@/lib/auth/hooks";
 import { RampSlideOver } from "@/components/ramps/ramp-slide-over";
 import { CommunicationLog } from "@/components/schools/communication-log";
+import { RiskSummary } from "@/components/schools/risk-summary";
+import { TrafficLightIndicator } from "@/components/ui/traffic-light";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,7 +25,8 @@ import {
 } from "@/components/ui/table";
 import { ArrowLeft, ArrowUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Ramp } from "@/lib/types/database";
+import { getFinancialTrafficLight, getCommunicationTrafficLight, getMilestoneTrafficLight, getWorstTrafficLight } from "@/lib/traffic-lights";
+import type { Ramp, Milestone, Variation, Defect } from "@/lib/types/database";
 
 type SortKey = "name" | "lifecycle_stage" | "status";
 type SortDir = "asc" | "desc";
@@ -57,6 +63,9 @@ export default function SchoolViewPage({
   const canEdit = useCanWrite();
   const [school, setSchool] = useState<any>(null);
   const [ramps, setRamps] = useState<Ramp[]>([]);
+  const [milestones, setMilestones] = useState<Milestone[]>([]);
+  const [variations, setVariations] = useState<Variation[]>([]);
+  const [defects, setDefects] = useState<Defect[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRamp, setSelectedRamp] = useState<Ramp | null>(null);
   const [slideOverOpen, setSlideOverOpen] = useState(false);
@@ -67,12 +76,18 @@ export default function SchoolViewPage({
   useEffect(() => {
     const load = async () => {
       try {
-        const [schoolData, rampsData] = await Promise.all([
+        const [schoolData, rampsData, milestonesData, variationsData, defectsData] = await Promise.all([
           fetchSchoolById(id),
           fetchRampsBySchool(id),
+          fetchMilestonesBySchool(id),
+          fetchVariationsBySchool(id),
+          fetchDefectsBySchool(id),
         ]);
         setSchool(schoolData);
         setRamps(rampsData);
+        setMilestones(milestonesData);
+        setVariations(variationsData);
+        setDefects(defectsData);
       } catch (err) {
         console.error("Failed to load school:", err);
       } finally {
@@ -173,12 +188,24 @@ export default function SchoolViewPage({
                 </span>
               </div>
             </div>
-            <Badge variant={statusBadgeVariant[school.status] ?? "outline"}>
-              {statusLabels[school.status] ?? school.status}
-            </Badge>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span>Milestone</span>
+                <TrafficLightIndicator status={getWorstTrafficLight(milestones.map((m) => getMilestoneTrafficLight(m.planned_date, m.actual_date)))} size="md" />
+                <span>Financial</span>
+                <TrafficLightIndicator status={getWorstTrafficLight(ramps.map((r) => getFinancialTrafficLight(Number(r.budget_amount), Number(r.forecast_amount))))} size="md" />
+                <span>Comms</span>
+                <TrafficLightIndicator status={getCommunicationTrafficLight(lastContact ?? school.last_communication_date)} size="md" />
+              </div>
+              <Badge variant={statusBadgeVariant[school.status] ?? "outline"}>
+                {statusLabels[school.status] ?? school.status}
+              </Badge>
+            </div>
           </div>
         </CardContent>
       </Card>
+
+      <RiskSummary ramps={ramps} milestones={milestones} variations={variations} defects={defects} />
 
       <div>
         <h3 className="mb-3 text-lg font-semibold text-vsba-charcoal">
@@ -212,7 +239,10 @@ export default function SchoolViewPage({
                 sorted.map((ramp) => (
                   <TableRow
                     key={ramp.id}
-                    className="cursor-pointer hover:bg-vsba-teal/10"
+                    className={cn(
+                      "cursor-pointer hover:bg-vsba-teal/10",
+                      (ramp.status === "blocked" || getFinancialTrafficLight(Number(ramp.budget_amount), Number(ramp.forecast_amount)) === "red") && "bg-red-50"
+                    )}
                     onClick={() => handleRampClick(ramp)}
                   >
                     <TableCell className="font-medium">{ramp.name}</TableCell>
