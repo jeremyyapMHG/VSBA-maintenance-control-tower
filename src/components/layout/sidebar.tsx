@@ -2,16 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, School, Settings, Map, Users, Upload } from "lucide-react";
+import { LayoutDashboard, School, Map, Users, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Schools", href: "/", icon: School },
+  { name: "Schools", href: "/schools", icon: School },
   { name: "Regions", href: "/admin/regions", icon: Map },
   { name: "Users", href: "/admin/users", icon: Users },
   { name: "Import", href: "/admin/import", icon: Upload },
-  { name: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
 export function Sidebar() {

@@ -7,12 +7,16 @@ export interface DashboardMetrics {
   activeSchools: number;
   // Lifecycle distribution
   lifecycleDistribution: { name: string; value: number; color: string }[];
-  // Completion %
+  // Completion counts + %
   practicalCompletionPct: number;
+  practicalCompletionCount: number;
   adminCompletionPct: number;
-  // Defects & variations %
+  adminCompletionCount: number;
+  // Defects & variations
   defectsPct: number;
   variationsPct: number;
+  schoolsWithDefects: number;
+  schoolsWithVariations: number;
   // Financials
   totalBudget: number;
   totalActual: number;
@@ -22,6 +26,7 @@ export interface DashboardMetrics {
   commGreen: number;
   commAmber: number;
   commRed: number;
+  overdueSchools: { name: string; daysSince: number }[];
 }
 
 const stageColors: Record<string, string> = {
@@ -99,15 +104,33 @@ export function computeDashboardMetrics(
     else commRed++;
   }
 
+  // Overdue schools list (sorted by stalest first)
+  const overdueSchools: { name: string; daysSince: number }[] = [];
+  const now = new Date();
+  for (const s of schools) {
+    const light = getCommunicationTrafficLight(s.last_communication_date);
+    if (light === "red") {
+      const daysSince = s.last_communication_date
+        ? Math.floor((now.getTime() - new Date(s.last_communication_date).getTime()) / 86400000)
+        : 999;
+      overdueSchools.push({ name: s.name, daysSince });
+    }
+  }
+  overdueSchools.sort((a, b) => b.daysSince - a.daysSince);
+
   return {
     totalSchools: schools.length,
     totalRamps,
     activeSchools: schools.filter((s) => s.status === "active").length,
     lifecycleDistribution,
     practicalCompletionPct,
+    practicalCompletionCount: pcComplete,
     adminCompletionPct,
+    adminCompletionCount: acComplete,
     defectsPct,
     variationsPct,
+    schoolsWithDefects: rampIdsWithDefects.size,
+    schoolsWithVariations: rampIdsWithVariations.size,
     totalBudget,
     totalActual,
     totalForecast,
@@ -115,5 +138,6 @@ export function computeDashboardMetrics(
     commGreen,
     commAmber,
     commRed,
+    overdueSchools,
   };
 }

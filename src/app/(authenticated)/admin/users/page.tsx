@@ -50,7 +50,7 @@ export default function AdminUsersPage() {
   const { profile } = useAuth();
   const router = useRouter();
   const supabase = createClient();
-  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [users, setUsers] = useState<(UserProfile & { email?: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<UserRole>("end_user");
@@ -66,7 +66,7 @@ export default function AdminUsersPage() {
   useEffect(() => {
     const fetchUsers = async () => {
       const { data, error } = await supabase
-        .from("user_profiles")
+        .from("user_profiles_with_email")
         .select("*")
         .order("created_at", { ascending: false });
 
@@ -193,7 +193,7 @@ export default function AdminUsersPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>User ID</TableHead>
+                  <TableHead>Email</TableHead>
                   <TableHead>Organization</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Joined</TableHead>
@@ -202,8 +202,8 @@ export default function AdminUsersPage() {
               <TableBody>
                 {users.map((u) => (
                   <TableRow key={u.id}>
-                    <TableCell className="font-mono text-xs">
-                      {u.auth_user_id.slice(0, 8)}...
+                    <TableCell className="text-sm">
+                      {u.email ?? u.auth_user_id.slice(0, 8) + "..."}
                     </TableCell>
                     <TableCell>{u.organization ?? "\u2014"}</TableCell>
                     <TableCell>

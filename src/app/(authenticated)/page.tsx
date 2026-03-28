@@ -6,7 +6,7 @@ import { computeDashboardMetrics } from "@/lib/metrics";
 import { MetricTile } from "@/components/dashboard/metric-tile";
 import { FilterBar, type DashboardFilters } from "@/components/dashboard/filter-bar";
 import { SchoolsTable } from "@/components/dashboard/schools-table";
-import { DonutChart, LifecyclePieChart, FinancialBarChart, CommHealthChart } from "@/components/dashboard/charts";
+import { LifecycleBarChart, CompletionDonut, FinancialSummary, CommHealthSection, QualityCard } from "@/components/dashboard/charts";
 import { UpcomingMilestones } from "@/components/dashboard/upcoming-milestones";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { School, Building2, Wrench, Activity } from "lucide-react";
@@ -155,14 +155,14 @@ export default function DashboardPage() {
         <MetricTile title="Regions" value={regions.length} icon={Activity} description="DET regions" />
       </div>
 
-      {/* Charts Row 1: Lifecycle + Completion donut charts */}
+      {/* Charts Row 1: Lifecycle + Completion + Quality */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card className="lg:col-span-1">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">Lifecycle Distribution</CardTitle>
           </CardHeader>
           <CardContent>
-            <LifecyclePieChart data={metrics.lifecycleDistribution} />
+            <LifecycleBarChart data={metrics.lifecycleDistribution} total={metrics.totalRamps} />
           </CardContent>
         </Card>
 
@@ -172,8 +172,19 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="flex justify-around py-4">
-              <DonutChart percentage={metrics.practicalCompletionPct} label="Practical Completion" />
-              <DonutChart percentage={metrics.adminCompletionPct} label="Admin Completion" color="#7B1B21" />
+              <CompletionDonut
+                percentage={metrics.practicalCompletionPct}
+                count={metrics.practicalCompletionCount}
+                total={metrics.totalRamps}
+                label="Practical Completion"
+              />
+              <CompletionDonut
+                percentage={metrics.adminCompletionPct}
+                count={metrics.adminCompletionCount}
+                total={metrics.totalRamps}
+                label="Admin Completion"
+                color="#7B1B21"
+              />
             </div>
           </CardContent>
         </Card>
@@ -183,10 +194,12 @@ export default function DashboardPage() {
             <CardTitle className="text-sm">Quality & Variations</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex justify-around py-4">
-              <DonutChart percentage={metrics.defectsPct} label="With Defects" color="#EF4444" />
-              <DonutChart percentage={metrics.variationsPct} label="With Variations" color="#F59E0B" />
-            </div>
+            <QualityCard
+              schoolsWithDefects={metrics.schoolsWithDefects}
+              schoolsWithVariations={metrics.schoolsWithVariations}
+              totalSchools={metrics.totalSchools}
+              totalRamps={metrics.totalRamps}
+            />
           </CardContent>
         </Card>
       </div>
@@ -198,10 +211,9 @@ export default function DashboardPage() {
             <CardTitle className="text-sm">Financial Summary</CardTitle>
           </CardHeader>
           <CardContent>
-            <FinancialBarChart
-              budget={metrics.totalBudget}
-              actual={metrics.totalActual}
-              forecast={metrics.totalForecast}
+            <FinancialSummary
+              totalApprovedFunding={metrics.totalBudget}
+              contingencyAmount={metrics.totalForecast}
               variations={metrics.totalVariations}
             />
           </CardContent>
@@ -212,7 +224,12 @@ export default function DashboardPage() {
             <CardTitle className="text-sm">Communication Health</CardTitle>
           </CardHeader>
           <CardContent>
-            <CommHealthChart green={metrics.commGreen} amber={metrics.commAmber} red={metrics.commRed} />
+            <CommHealthSection
+              green={metrics.commGreen}
+              amber={metrics.commAmber}
+              red={metrics.commRed}
+              overdueSchools={metrics.overdueSchools}
+            />
           </CardContent>
         </Card>
       </div>

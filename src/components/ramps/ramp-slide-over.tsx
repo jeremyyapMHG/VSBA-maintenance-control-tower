@@ -96,7 +96,7 @@ export function RampSlideOver({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+      <SheetContent className="w-full sm:max-w-2xl overflow-y-auto mr-4 mt-4 mb-4 rounded-lg">
         <SheetHeader>
           <SheetTitle className="text-vsba-charcoal">{ramp.name}</SheetTitle>
           {ramp.description && (

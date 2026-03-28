@@ -162,9 +162,9 @@ export default function SchoolViewPage({
 
   return (
     <div className="space-y-6">
-      <Button variant="ghost" size="sm" onClick={() => router.push("/")}>
+      <Button variant="ghost" size="sm" onClick={() => router.push("/schools")}>
         <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Dashboard
+        Back to Schools
       </Button>
 
       <Card>
@@ -269,6 +269,34 @@ export default function SchoolViewPage({
           </Table>
         </div>
       </div>
+
+      {/* Status / Commentary */}
+      {ramps.some((r) => r.commentary) && (
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="mb-4 text-lg font-semibold text-vsba-charcoal">
+              Status / Commentary
+            </h3>
+            <div className="space-y-4">
+              {ramps
+                .filter((r) => r.commentary)
+                .map((ramp) => (
+                  <div key={ramp.id} className="rounded-md border p-4">
+                    <div className="mb-2 flex items-center gap-2">
+                      <span className="text-sm font-medium text-vsba-charcoal">{ramp.name}</span>
+                      <Badge variant="outline" className="text-xs">
+                        {stageLabels[ramp.lifecycle_stage] ?? ramp.lifecycle_stage}
+                      </Badge>
+                    </div>
+                    <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+                      {ramp.commentary}
+                    </p>
+                  </div>
+                ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Communication Log */}
       <CommunicationLog
