@@ -197,7 +197,7 @@ function WaterfallChart({
             axisLine={false}
           />
           <Tooltip
-            formatter={(value: number) => formatCurrency(value)}
+            formatter={(value) => formatCurrency(Number(value))}
             labelFormatter={(label) => label}
           />
           <Bar dataKey="base" stackId="waterfall" fill="transparent" />
