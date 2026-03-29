@@ -124,41 +124,56 @@ export function CompletionDonut({ percentage, count, total, label, color = "#AF2
 /* ── Financial Summary: clean stat cards ── */
 
 interface FinancialSummaryProps {
-  totalApprovedFunding: number;
-  contingencyAmount: number;
+  approvedFunding: number;
+  forecastCost: number;
   variations: number;
 }
 
-export function FinancialSummary({ totalApprovedFunding, contingencyAmount, variations }: FinancialSummaryProps) {
+export function FinancialSummary({ approvedFunding, forecastCost, variations }: FinancialSummaryProps) {
   const formatCurrency = (value: number) => {
     if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
     if (value >= 1_000) return `$${(value / 1_000).toFixed(0)}K`;
     return `$${value.toFixed(0)}`;
   };
 
+  const contingency = approvedFunding * 0.1;
+  const threshold = approvedFunding + contingency;
+  const isOverThreshold = forecastCost > threshold;
+  const isOverBudget = forecastCost > approvedFunding;
+
   return (
     <div className="space-y-4">
       {/* Summary cards */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="rounded-md border p-4 text-center">
-          <p className="text-xs text-muted-foreground">Total Approved Funding</p>
-          <p className="mt-1 text-xl font-bold text-vsba-charcoal">{formatCurrency(totalApprovedFunding)}</p>
+          <p className="text-xs text-muted-foreground">Approved Funding</p>
+          <p className="mt-1 text-xl font-bold text-vsba-charcoal">{formatCurrency(approvedFunding)}</p>
         </div>
         <div className="rounded-md border p-4 text-center">
-          <p className="text-xs text-muted-foreground">Contingency Amount</p>
-          <p className="mt-1 text-xl font-bold text-vsba-charcoal">{formatCurrency(contingencyAmount)}</p>
+          <p className="text-xs text-muted-foreground">Contingency (10%)</p>
+          <p className="mt-1 text-xl font-bold text-vsba-charcoal">{formatCurrency(contingency)}</p>
         </div>
         <div className="rounded-md border p-4 text-center">
-          <p className="text-xs text-muted-foreground">Variations</p>
+          <p className="text-xs text-muted-foreground">Approved Variations</p>
           <p className="mt-1 text-xl font-bold text-vsba-charcoal">{formatCurrency(variations)}</p>
+        </div>
+        <div className={`rounded-md border p-4 text-center ${isOverThreshold ? "border-red-200 bg-red-50" : isOverBudget ? "border-amber-200 bg-amber-50" : "border-green-200 bg-green-50"}`}>
+          <p className="text-xs text-muted-foreground">Forecast Cost</p>
+          <p className={`mt-1 text-xl font-bold ${isOverThreshold ? "text-red-600" : isOverBudget ? "text-amber-600" : "text-green-600"}`}>
+            {formatCurrency(forecastCost)}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {isOverThreshold ? "exceeds budget + contingency" : isOverBudget ? "within contingency" : "within budget"}
+          </p>
         </div>
       </div>
 
       {/* Waterfall chart */}
       <WaterfallChart
-        totalApprovedFunding={totalApprovedFunding}
-        contingencyAmount={contingencyAmount}
+        approvedFunding={approvedFunding}
+        contingency={contingency}
         variations={variations}
+        forecastCost={forecastCost}
         formatCurrency={formatCurrency}
       />
     </div>
@@ -168,46 +183,96 @@ export function FinancialSummary({ totalApprovedFunding, contingencyAmount, vari
 /* ── Waterfall chart sub-component ── */
 
 function WaterfallChart({
-  totalApprovedFunding,
-  contingencyAmount,
+  approvedFunding,
+  contingency,
   variations,
+  forecastCost,
   formatCurrency,
 }: {
-  totalApprovedFunding: number;
-  contingencyAmount: number;
+  approvedFunding: number;
+  contingency: number;
   variations: number;
+  forecastCost: number;
   formatCurrency: (v: number) => string;
 }) {
-  const netPosition = totalApprovedFunding + variations;
-  const data = [
-    { name: "Approved\nFunding", value: totalApprovedFunding, base: 0, fill: "#B9E3E6" },
-    { name: "Variations", value: variations, base: totalApprovedFunding, fill: variations >= 0 ? "#EF4444" : "#10B981" },
-    { name: "Net\nPosition", value: netPosition, base: 0, fill: "#AF272F" },
+  const budgetEnvelope = approvedFunding + contingency + variations;
+  const maxVal = Math.max(budgetEnvelope, forecastCost);
+  const isOver = forecastCost > budgetEnvelope;
+
+  const toPercent = (v: number) => (maxVal > 0 ? (v / maxVal) * 100 : 0);
+
+  const bars = [
+    {
+      label: "Approved Funding",
+      bottomPct: 0,
+      heightPct: toPercent(approvedFunding),
+      color: "#B9E3E6",
+      value: approvedFunding,
+    },
+    {
+      label: "Contingency",
+      bottomPct: toPercent(approvedFunding),
+      heightPct: toPercent(contingency),
+      color: "#50D8D0",
+      value: contingency,
+    },
+    {
+      label: "Variations",
+      bottomPct: toPercent(approvedFunding + contingency),
+      heightPct: toPercent(Math.abs(variations)),
+      color: variations >= 0 ? "#10B981" : "#EF4444",
+      value: variations,
+    },
+    {
+      label: "Forecast Cost",
+      bottomPct: 0,
+      heightPct: toPercent(forecastCost),
+      color: isOver ? "#EF4444" : "#AF272F",
+      value: forecastCost,
+    },
   ];
 
+  // Y-axis labels
+  const steps = 4;
+  const yLabels = Array.from({ length: steps + 1 }, (_, i) => (maxVal / steps) * i);
+
   return (
-    <div className="h-48">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} barCategoryGap="25%">
-          <XAxis dataKey="name" fontSize={11} tickLine={false} />
-          <YAxis
-            tickFormatter={formatCurrency}
-            fontSize={10}
-            tickLine={false}
-            axisLine={false}
-          />
-          <Tooltip
-            formatter={(value) => formatCurrency(Number(value))}
-            labelFormatter={(label) => label}
-          />
-          <Bar dataKey="base" stackId="waterfall" fill="transparent" />
-          <Bar dataKey="value" stackId="waterfall" radius={[4, 4, 0, 0]}>
-            {data.map((entry, i) => (
-              <Cell key={i} fill={entry.fill} />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+    <div className="flex h-56 gap-2">
+      {/* Y axis */}
+      <div className="flex w-14 flex-col-reverse justify-between py-6 text-right text-[10px] text-muted-foreground">
+        {yLabels.map((v, i) => (
+          <span key={i}>{formatCurrency(v)}</span>
+        ))}
+      </div>
+
+      {/* Bars */}
+      <div className="flex flex-1 items-end gap-3 border-b border-l px-2 pb-6">
+        {bars.map((bar) => (
+          <div key={bar.label} className="group relative flex flex-1 flex-col items-center">
+            {/* Bar container */}
+            <div className="relative w-full" style={{ height: "180px" }}>
+              <div
+                className="absolute left-1 right-1 rounded-t transition-all"
+                style={{
+                  bottom: `${bar.bottomPct}%`,
+                  height: `${Math.max(bar.heightPct, 0.5)}%`,
+                  backgroundColor: bar.color,
+                }}
+              />
+              {/* Tooltip on hover */}
+              <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-center opacity-0 transition-opacity group-hover:opacity-100">
+                <span className="rounded bg-vsba-charcoal px-2 py-1 text-[10px] text-white shadow">
+                  {formatCurrency(bar.value)}
+                </span>
+              </div>
+            </div>
+            {/* Label */}
+            <span className="mt-1 text-center text-[10px] leading-tight text-muted-foreground">
+              {bar.label}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

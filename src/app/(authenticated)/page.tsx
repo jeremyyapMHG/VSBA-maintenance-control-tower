@@ -212,8 +212,8 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <FinancialSummary
-              totalApprovedFunding={metrics.totalBudget}
-              contingencyAmount={metrics.totalForecast}
+              approvedFunding={metrics.totalBudget}
+              forecastCost={metrics.totalForecast}
               variations={metrics.totalVariations}
             />
           </CardContent>

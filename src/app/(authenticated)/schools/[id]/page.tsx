@@ -11,6 +11,7 @@ import { useCanWrite } from "@/lib/auth/hooks";
 import { RampSlideOver } from "@/components/ramps/ramp-slide-over";
 import { CommunicationLog } from "@/components/schools/communication-log";
 import { RiskSummary } from "@/components/schools/risk-summary";
+import { FinancialSummary } from "@/components/dashboard/charts";
 import { TrafficLightIndicator } from "@/components/ui/traffic-light";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -224,14 +225,15 @@ export default function SchoolViewPage({
                 <TableHead>
                   <SortHeader label="Status" sortKeyName="status" />
                 </TableHead>
-                <TableHead>Budget</TableHead>
-                <TableHead>Forecast</TableHead>
+                <TableHead>Approved Funding</TableHead>
+                <TableHead>Contingency (10%)</TableHead>
+                <TableHead>Forecast Cost</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {sorted.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
                     No ramps found for this school.
                   </TableCell>
                 </TableRow>
@@ -260,6 +262,15 @@ export default function SchoolViewPage({
                       {new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" }).format(ramp.budget_amount)}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
+                      {new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" }).format(Number(ramp.budget_amount) * 0.1)}
+                    </TableCell>
+                    <TableCell className={cn(
+                      Number(ramp.forecast_amount) > Number(ramp.budget_amount) * 1.1
+                        ? "font-medium text-red-600"
+                        : Number(ramp.forecast_amount) > Number(ramp.budget_amount)
+                        ? "text-amber-600"
+                        : "text-muted-foreground"
+                    )}>
                       {new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" }).format(ramp.forecast_amount)}
                     </TableCell>
                   </TableRow>
@@ -269,6 +280,18 @@ export default function SchoolViewPage({
           </Table>
         </div>
       </div>
+
+      {/* Financial Summary */}
+      <Card>
+        <CardContent className="p-6">
+          <h3 className="mb-4 text-lg font-semibold text-vsba-charcoal">Financial Summary</h3>
+          <FinancialSummary
+            approvedFunding={ramps.reduce((s, r) => s + Number(r.budget_amount), 0)}
+            forecastCost={ramps.reduce((s, r) => s + Number(r.forecast_amount), 0)}
+            variations={variations.filter((v) => v.status === "approved").reduce((s, v) => s + Number(v.amount), 0)}
+          />
+        </CardContent>
+      </Card>
 
       {/* Status / Commentary */}
       {ramps.some((r) => r.commentary) && (
