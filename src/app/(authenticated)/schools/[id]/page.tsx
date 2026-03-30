@@ -162,50 +162,44 @@ export default function SchoolViewPage({
   );
 
   return (
-    <div className="space-y-6">
-      <Button variant="ghost" size="sm" onClick={() => router.push("/schools")}>
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Schools
-      </Button>
-
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between">
+    <>
+      {/* Sticky school banner */}
+      <div className="-mx-6 -mt-6 mb-6 sticky top-0 z-10 border-b bg-white px-6 py-3 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => router.push("/schools")}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
             <div>
-              <h2 className="text-2xl font-bold text-vsba-charcoal">
-                {school.name}
-              </h2>
-              <div className="mt-2 flex items-center gap-3 text-sm text-muted-foreground">
+              <div className="flex items-center gap-3">
+                <h2 className="text-lg font-bold text-vsba-charcoal">{school.name}</h2>
+                <Badge variant={statusBadgeVariant[school.status] ?? "outline"} className="text-xs">
+                  {statusLabels[school.status] ?? school.status}
+                </Badge>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
                 <span>{school.regions?.name ?? "No region"}</span>
                 <span>|</span>
                 <span>{school.address ?? "No address"}</span>
+                <span>|</span>
+                <span>Last contact: {school.last_communication_date ? new Date(school.last_communication_date).toLocaleDateString() : "Never"}</span>
               </div>
-              <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-                <span>Last contact:</span>
-                <span>
-                  {school.last_communication_date
-                    ? new Date(school.last_communication_date).toLocaleDateString()
-                    : "Never"}
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span>Milestone</span>
-                <TrafficLightIndicator status={getWorstTrafficLight(milestones.map((m) => getMilestoneTrafficLight(m.planned_date, m.actual_date)))} size="md" />
-                <span>Financial</span>
-                <TrafficLightIndicator status={getWorstTrafficLight(ramps.map((r) => getFinancialTrafficLight(Number(r.budget_amount), Number(r.forecast_amount))))} size="md" />
-                <span>Comms</span>
-                <TrafficLightIndicator status={getCommunicationTrafficLight(lastContact ?? school.last_communication_date)} size="md" />
-              </div>
-              <Badge variant={statusBadgeVariant[school.status] ?? "outline"}>
-                {statusLabels[school.status] ?? school.status}
-              </Badge>
             </div>
           </div>
-        </CardContent>
-      </Card>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>Milestone</span>
+              <TrafficLightIndicator status={getWorstTrafficLight(milestones.map((m) => getMilestoneTrafficLight(m.planned_date, m.actual_date)))} size="md" />
+              <span>Financial</span>
+              <TrafficLightIndicator status={getWorstTrafficLight(ramps.map((r) => getFinancialTrafficLight(Number(r.budget_amount), Number(r.forecast_amount))))} size="md" />
+              <span>Comms</span>
+              <TrafficLightIndicator status={getCommunicationTrafficLight(lastContact ?? school.last_communication_date)} size="md" />
+            </div>
+          </div>
+        </div>
+      </div>
 
+      <div className="space-y-6">
       <RiskSummary ramps={ramps} milestones={milestones} variations={variations} defects={defects} />
 
       <div>
@@ -335,6 +329,7 @@ export default function SchoolViewPage({
         canEdit={canEdit}
         onRampUpdated={handleRampUpdated}
       />
-    </div>
+      </div>
+    </>
   );
 }

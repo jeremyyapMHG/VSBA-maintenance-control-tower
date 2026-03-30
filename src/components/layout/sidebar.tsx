@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, School, Map, Users, Upload } from "lucide-react";
@@ -50,6 +51,15 @@ export function Sidebar() {
           );
         })}
       </nav>
+      <div className="border-t px-6 py-4">
+        <Image
+          src="/Meinhardt Logo Big.png"
+          alt="Meinhardt"
+          width={160}
+          height={40}
+          className="opacity-70"
+        />
+      </div>
     </aside>
   );
 }

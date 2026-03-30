@@ -74,7 +74,7 @@ BEGIN
         r.id,
         v_desc,
         v_amount,
-        v_status,
+        v_status::variation_status,
         CURRENT_DATE - (floor(random() * 180)::INTEGER || ' days')::INTERVAL
       );
     END LOOP;
