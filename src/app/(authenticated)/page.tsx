@@ -147,6 +147,9 @@ export default function DashboardPage() {
         <p className="mt-1 text-muted-foreground">Overview of the RAMPS school maintenance program.</p>
       </div>
 
+      {/* Filters */}
+      <FilterBar regions={regions} filters={filters} onFilterChange={setFilters} />
+
       {/* Summary Tiles */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricTile title="Total Schools" value={metrics.totalSchools} icon={School} description="In program" />
@@ -244,8 +247,7 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
 
-      {/* Filters + Schools Table */}
-      <FilterBar regions={regions} filters={filters} onFilterChange={setFilters} />
+      {/* Schools Table */}
       <SchoolsTable schools={schoolsWithCounts} />
     </div>
   );
